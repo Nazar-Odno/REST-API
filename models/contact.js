@@ -1,33 +1,51 @@
-import { Schema, model } from "mongoose";
-import { handleSaveError, addUpdateSettings } from "./hooks.js";
+/** @format */
 
-const contactSchema = new Schema({
-	name: {
-		type: String,
-		required: [true, 'Set name for contact'],
+const { Schema, model } = require('mongoose');
+const Joi = require('joi');
+const { handleMongooseError } = require('../utils');
+
+const emailRegexp = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+
+const contactSchema = new Schema(
+	{
+		name: {
+			type: String,
+			required: [true, 'Set name for contact'],
+		},
+		email: {
+			type: String,
+			match: emailRegexp,
+			required: true,
+		},
+		phone: {
+			type: String,
+			required: true,
+		},
+		favorite: {
+			type: Boolean,
+			default: false,
+		},
+		owner: {
+			type: Schema.Types.ObjectId,
+			ref: 'user',
+		},
 	},
-	email: {
-		type: String,
-	},
-	phone: {
-		type: String,
-	},
-	favorite: {
-		type: Boolean,
-		default: false,
-	},
-	owner: {
-		type: Schema.Types.ObjectId,
-		ref: 'user',
-	},
-}, { versionKey: false });
+	{ versionKey: false, timestamps: true }
+);
 
-contactSchema.post("save", handleSaveError);
+contactSchema.post('save', handleMongooseError);
 
-contactSchema.pre("findOneAndUpdate", addUpdateSettings);
+const contactAddSchema = Joi.object({
+	_id: Joi.string(),
+	name: Joi.string().required(),
+	email: Joi.string().pattern(emailRegexp).required(),
+	phone: Joi.string().required(),
+	favorite: Joi.boolean(),
+});
 
-contactSchema.post("findOneAndUpdate", handleSaveError);
+const Contact = model('contact', contactSchema);
 
-const Contact = model("contact", contactSchema);
-
-export default Contact;
+module.exports = {
+	Contact,
+	contactAddSchema,
+};
