@@ -1,17 +1,7 @@
-/** @format */
+import { authenticate } from "./authenticate.js";
+import { isEmptyBody } from "./isEmptyBody.js";
+import { isEmptyFavorite } from "./isEmptyFavorite.js";
+import { isValidId } from "./isValidId.js";
+import { upload } from "./upload.js";
 
-const validateBody = require('./validatebody.js');
-const isValidId = require('./isvalidid.js');
-const authenticate = require('./authenticate.js');
-const checkOwner = require('./checkowner.js');
-const upload = require('./upload.js');
-const isEmptyBody = require('./isemptybody.js');
-
-module.exports = {
-	validateBody,
-	isValidId,
-	authenticate,
-	checkOwner,
-	upload,
-	isEmptyBody,
-};
+export { isEmptyBody, isValidId, isEmptyFavorite, authenticate, upload };

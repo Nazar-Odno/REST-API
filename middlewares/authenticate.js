@@ -1,26 +1,38 @@
-/** @format */
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+import { HttpErr } from "../helpers/HttpErr.js";
+import UserModel from "../models/contacts/User.js";
 
-const jwt = require('jsonwebtoken');
-const { HttpError } = require('../utils');
-const { User } = require('../models');
+dotenv.config();
 
-const { SECRET_KEY } = process.env;
+const { JWT_SECRET } = process.env;
 
-const authenticate = async (req, res, next) => {
-	const { authorization = '' } = req.headers;
-	const [bearer, token] = authorization.split(' ');
+export const authenticate = async (req, res, next) => {
+  const { authorization } = req.headers;
 
-	if (!bearer) next(HttpError(401));
+  if (!authorization) {
+    return next(HttpErr(401, "Not authorized"));
+  }
 
-	try {
-		const { id } = jwt.verify(token, SECRET_KEY);
-		const user = await User.findById(id);
-		req.user = user;
-		if (!user || !user.token || user.token !== token) next(HttpError(401, 'User not found'));
-		next();
-	} catch {
-		next(HttpError(401));
-	}
+  const [bearer, token] = authorization.split(" ");
+
+  if (bearer !== "Bearer") {
+    return next(HttpErr(401, "Not authorized"));
+  }
+
+  try {
+    const { id } = jwt.verify(token, JWT_SECRET);
+
+    const user = await UserModel.findById(id);
+
+    if (!user || !user.token || token !== user.token) {
+      return next(HttpErr(401, "Not authorized"));
+    }
+
+    req.user = user;
+
+    next();
+  } catch (error) {
+    next(HttpErr(401, "Not authorized"));
+  }
 };
-
-module.exports = authenticate;
